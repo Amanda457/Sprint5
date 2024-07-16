@@ -1,31 +1,26 @@
 <?php
 
-use App\Http\Controllers\PassportAuthController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 
-Route::group([
-    'prefix' => 'auth'
-], function () {
-    Route::post('login', 'PassportAuthController@login');
-    Route::post('signup', 'PassportAuthController@signUp');
-  
-    Route::group([
-      'middleware' => 'auth:api'
-    ], function() {
-        Route::get('logout', 'PassportAuthController@logout');
-        Route::get('user', 'PassportAuthController@user');
-        /*Para bloquear la lista de jugadores:
-        Route::apiResource('players', PlayerController::class);
-        y para desloguearte:
-        Route:post('logout', [PassportAuthController::clas, 'logout']);
-        */
+//Rutas abiertas para registarse y hacer login.
+Route::post('register', [UserController::class,'register']);
+Route::post('login', [UserController::class,'login']);
+//
+
+/*
+Route::middleware(['auth:api'])->group(function () {
+
+    Route::post('/logout', [UserController::class,'logout']);
+    Route::middleware(['can:is-admin'])->group(function () {
+        Route::get('/admin', [UserController::class, 'index']);
+    });
+
+    Route::middleware(['can:is-player'])->group(function () {
+        Route::get('/player', [UserController::class, 'index']);
     });
 });
-
-Route::post('register', [PassportAuthController::class,'register']);
-Route::post('login', [PassportAuthController::class,'login']);
-Route::post('logout', [PassportAuthController::class,'logout']);
-
+*/
 
 ?>

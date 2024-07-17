@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('password');
             $table->enum('rol', ['admin', 'jugador'])->default('jugador');
             $table->rememberToken();
-            $table->timestamps('created_at');
+            $table->timestamps();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -47,3 +47,5 @@ return new class extends Migration
         Schema::dropIfExists('sessions');
     }
 };
+/*Client ID....................................................3
+Client secret.................1lg43JFHhSStVTLajlgxu4piUgnZNMqQGwbffysC*/

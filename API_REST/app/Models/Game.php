@@ -10,11 +10,15 @@ class Game extends Model
     use HasFactory;
 
     protected $fillable = [
-        'player_id',
+        'user_id',
         'dice1',
         'dice2',
-        'result',
         'winner'
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
 }

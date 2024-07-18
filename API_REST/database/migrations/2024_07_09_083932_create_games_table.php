@@ -18,7 +18,6 @@ return new class extends Migration
             $table->foreignIdFor(User::class)->constrained()->cascadeOnDelete();
             $table->integer('dice1');
             $table->integer('dice2');
-            $table->integer('result');
             $table->boolean('winner');
         });
     }

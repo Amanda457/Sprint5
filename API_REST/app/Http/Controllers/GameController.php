@@ -1,15 +1,19 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\User;
 use App\Models\Game;
 use App\Http\Requests\StoreGameRequest;
 use App\Http\Requests\UpdateGameRequest;
+use Illuminate\Http\Request;
+
+const WINNED_GAME = 7;
 
 class GameController extends Controller
 {
-    
-    const WINNED_GAME = 7;
+   
+    //const WINNED_GAME = 7;
+
     /**
      * Display a listing of the resource.
      */
@@ -21,28 +25,30 @@ class GameController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+   
+    public function playGame(Request $request)
     {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function playGame()
-    {
+        $user = $request->user();
+        
+        $dice1= rand(1,6);
+        $dice2= rand(1,6);
+        $result = $dice1 + $dice2;
+        $winner = $result == WINNED_GAME;
        
-        $game= new Game();
-        $game->dice1= rand(1,6);
-        $game->dice2= rand(1,6);
-        $game->result = $game->dice1 + $game->dice2;
-        if ($game->result == WINNED_GAME){
-            $game->winner = true;
-        } else{
-            $game->winner = false;
 
-        }
-        $game->store();
+       $game = Game::create([
+        'user_id' => $user->id,
+        'dice1' => $dice1,
+        'dice2' => $dice2,
+        'winner' => $winner,
+       ]);
+
+       if ($winner){
+        return response()->json(['message' => 'Has ganado!'], 200);
+    } else{
+        return response()->json(['message' => 'Loser.'], 200);
+    }
+    
     }
 
     /**

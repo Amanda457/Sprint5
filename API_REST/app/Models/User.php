@@ -45,4 +45,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    function games(){
+
+        return $this->hasMany(Game::class);
+    }
 }

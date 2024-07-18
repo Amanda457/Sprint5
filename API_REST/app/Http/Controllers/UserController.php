@@ -14,7 +14,7 @@ class UserController extends Controller
     {
         $request->validate(
             [
-                'nickname' => ['nullable', 'string', 'max:100'],
+                'nickname' => ['string', 'max:100'],
                 'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
                 'password' => ['required', Password::default()],
             ]
@@ -24,7 +24,7 @@ class UserController extends Controller
 
         $user = User::create(
             [
-                'nickname' => $request->nickname,
+                'nickname' => $nickname,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
             ]
@@ -73,8 +73,8 @@ class UserController extends Controller
             $token = $user->createToken('Token');  // Create token using user instance
 
             return response()->json([
-                'token' => $token->plainTextToken, // Access token in Laravel 11
-                'success' => true // Provide more informative response
+                'message' => "Sesión iniciada.",
+                'token' => $token->accessToken, // Access token in Laravel 11
             ], 200);
         } else {
             return response()->json([
@@ -93,7 +93,7 @@ class UserController extends Controller
         }
 
         return response()->json([
-            'success' => 'Logout successful'
+            'success' => 'Adiós, ¡Buena suerte!'
         ], 200);
     }
 
@@ -118,13 +118,14 @@ class UserController extends Controller
         
         if ($request->user()->id !== $user->id){
 
-            abort(403, 'No tienes permisos para realizar esta acción.');
+            abort(403, 'No puedes modificar un nickname que no sea el tuyo, que te conozco.');
 
         } else{
 
             $request->validate(['nickname' => ['nullable', 'string', 'max:100']]);
-            $user()->nickname = $request->nickname ?? 'Anònim';
+            $user->nickname = $request->nickname ?? 'Anònim';
             $user->save();
+            return response()->json(['message' => 'Nickname modificado, ¡Buen cambio!.'], 200);
         }
     }
 }

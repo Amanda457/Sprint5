@@ -74,7 +74,7 @@ class UserController extends Controller
 
     public function showAllPlayers()
     {
-        //  if (Gate::allows('is-admin')) {
+        if (Gate::allows('is-admin')) {
         $users = User::all();
 
         if ($users->isEmpty()) {
@@ -82,10 +82,10 @@ class UserController extends Controller
         }
         $users_with_percentage = $this->calculateIndividualWinPercentages($users);
         return response()->json($users_with_percentage, 200);
-        /* } else {
+        } else {
 
             abort(403, 'No tienes permisos para realizar esta acción.');
-        }*/
+        }
     }
     private function calculateIndividualWinPercentages($users)
     {
@@ -122,7 +122,7 @@ class UserController extends Controller
 
     public function getRanking()
     {
-        //  if (Gate::allows('is-admin')) {
+        if (Gate::allows('is-admin')) {
         $games = Game::all();
         if ($games->isNotEmpty()) {
             $totalGames = $games->count();
@@ -136,15 +136,15 @@ class UserController extends Controller
         }
 
 
-        /* } else {
+        } else {
 
             abort(403, 'No tienes permisos para realizar esta acción.');
-        }*/
+        }
     }
 
     public function getWinner()
     {
-        // if (Gate::allows('is-admin')) {
+        if (Gate::allows('is-admin')) {
         $users = User::all();
         if ($users->isEmpty()) {
             return response()->json(['message' => 'No hay jugadores registrados'], 200);
@@ -154,15 +154,15 @@ class UserController extends Controller
 
         return response()->json($winner, 200);
 
-        /* } else {
+        } else {
 
             abort(403, 'No tienes permisos para realizar esta acción.');
-        }*/
+        }
     }
 
     public function getLoser()
     {
-        // if (Gate::allows('is-admin')) {
+        if (Gate::allows('is-admin')) {
         $users = User::all();
         if ($users->isEmpty()) {
             return response()->json(['message' => 'No hay jugadores registrados'], 200);
@@ -172,10 +172,10 @@ class UserController extends Controller
 
         return response()->json($winner, 200);
 
-        /* } else {
+        } else {
 
             abort(403, 'No tienes permisos para realizar esta acción.');
-        }*/
+        }
     }
 
 

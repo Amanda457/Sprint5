@@ -4,22 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Models\Game;
-use App\Http\Requests\StoreGameRequest;
-use App\Http\Requests\UpdateGameRequest;
 use Illuminate\Http\Request;
-
-use function PHPUnit\Framework\isEmpty;
 
 const WINNED_GAME = 7;
 
 class GameController extends Controller
 {
 
-    //const WINNED_GAME = 7;
-
-    /**
-     * Display a listing of the resource.
-     */
     public function showGames(Request $request, string $id)
     {
         $user = User::find($id);

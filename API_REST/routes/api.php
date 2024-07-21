@@ -18,6 +18,9 @@ Route::middleware(['auth:api'])->group(function () {
     Route::post('/players/{id}/games', [GameController::class, 'playGame']);
     Route::get('/players/{id}/games', [GameController::class, 'showGames']);
     Route::delete('/players/{id}/games', [GameController::class, 'deleteGames']);
+    Route::get('/players/ranking', [UserController::class, 'getRanking']);
+    Route::get('/players/ranking/winner', [UserController::class, 'getWinner']);
+    Route::get('/players/ranking/loser', [UserController::class, 'getLoser']);
     /*
     Route::middleware(['can:is-admin'])->group(function () {
         Route::get('/players', [UserController::class, 'showAllPlayers']);-------OK

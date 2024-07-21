@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Game;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -38,58 +39,32 @@ class UserController extends Controller
         ], 201);
     }
 
-    /* public function login(Request $request)
-    {
-        $credentials = [
-            'nickname' => $request->nickname,
-            'password' => $request->password
-
-        ];
-
-        if (auth()->attempt($credentials)) {
-            $token = auth()->user()->createToken('Token')->accesToken;
-            return response()->json(['token => $token'], 200);
-        } else {
-            return response()->json(['error' => 'Credenciales erroneas']);
-        }
-      
-    }
-
-    public function logout(){
-
-      $token = auth()->user()->token();
-    
-      $token->revoke();
-
-      return response()->json(['success' => 'Logout successfully']);
-    }*/
-
     public function login(Request $request)
     {
-        $credentials = $request->only('nickname', 'password'); // More concise
+        $credentials = $request->only('nickname', 'password');
 
         if (auth()->attempt($credentials)) {
-            $user = auth()->user();  // Get authenticated user
-            $token = $user->createToken('Token');  // Create token using user instance
+            $user = auth()->user();
+            $token = $user->createToken('Token');
 
             return response()->json([
                 'message' => "Sesión iniciada.",
-                'token' => $token->accessToken, // Access token in Laravel 11
+                'token' => $token->accessToken,
             ], 200);
         } else {
             return response()->json([
-                'error' => 'Credenciales incorrectas', // Use Spanish for consistency
-                'success' => false // Indicate failure clearly
-            ], 401); // Use appropriate HTTP status code for unauthorized access
+                'error' => 'Credenciales incorrectas',
+                'success' => false
+            ], 401);
         }
     }
 
     public function logout()
     {
-        $user = auth()->user(); // Get authenticated user (if any)
+        $user = auth()->user();
 
-        if ($user) { // Check if user is logged in before revoking token
-            $user->tokens()->delete(); // Revoke all tokens for the user (more secure)
+        if ($user) {
+            $user->tokens()->delete();
         }
 
         return response()->json([
@@ -99,28 +74,44 @@ class UserController extends Controller
 
     public function showAllPlayers()
     {
-      //  if (Gate::allows('is-admin')) {
-            $users = User::all();
+        //  if (Gate::allows('is-admin')) {
+        $users = User::all();
 
-            if ($users->isEmpty()) {
-                return response()->json(['message' => 'No hay jugadores registrados'], 200);
-            }
-            return response()->json($users, 200);
-       /* } else {
+        if ($users->isEmpty()) {
+            return response()->json(['message' => 'No hay jugadores registrados'], 200);
+        }
+        $users_with_percentage = $this->calculateIndividualWinPercentages($users);
+        return response()->json($users_with_percentage, 200);
+        /* } else {
 
             abort(403, 'No tienes permisos para realizar esta acción.');
         }*/
+    }
+    private function calculateIndividualWinPercentages($users)
+    {
+        return $users->map(function ($user) {
+            $games = $user->games()->count();
+            $winnedGames = $user->games()->where('winner', true)->count();
+            $winPercentage = $games > 0 ? ($winnedGames / $games) * 100 : 0;
+
+            return [
+                'ID' => $user->id,
+                'Nickname' => $user->nickname,
+                'Email' => $user->email,
+                'Rol' => $user->rol,
+                'Percentatge èxit' => number_format($winPercentage, 2) . "%"
+            ];
+        });
     }
 
     public function update(Request $request, string $id)
     {
         $user = User::findOrFail($id);
-        
-        if ($request->user()->id !== $user->id){
+
+        if ($request->user()->id !== $user->id) {
 
             abort(403, 'No puedes modificar un nickname que no sea el tuyo, que te conozco.');
-
-        } else{
+        } else {
 
             $request->validate(['nickname' => ['nullable', 'string', 'max:100']]);
             $user->nickname = $request->nickname ?? 'Anònim';
@@ -128,5 +119,65 @@ class UserController extends Controller
             return response()->json(['message' => 'Nickname modificado, ¡Buen cambio!.'], 200);
         }
     }
-}
 
+    public function getRanking()
+    {
+        //  if (Gate::allows('is-admin')) {
+        $games = Game::all();
+        if ($games->isNotEmpty()) {
+            $totalGames = $games->count();
+            $winnedGames = $games->where('winner', true)->count();
+            $winPercentage = ($winnedGames / $totalGames) * 100;
+            $winPercentageFormatted = number_format($winPercentage, 2);
+
+            return response()->json(['Percentatge èxit mitjà total' => $winPercentageFormatted . "%"], 200);
+        } else {
+            return response()->json(['message' => 'No hay partidas registradas todavia'], 200);
+        }
+
+
+        /* } else {
+
+            abort(403, 'No tienes permisos para realizar esta acción.');
+        }*/
+    }
+
+    public function getWinner()
+    {
+        // if (Gate::allows('is-admin')) {
+        $users = User::all();
+        if ($users->isEmpty()) {
+            return response()->json(['message' => 'No hay jugadores registrados'], 200);
+        }
+        $users_with_percentage = $this->calculateIndividualWinPercentages($users);
+        $winner = $users_with_percentage->sortByDesc('Percentatge èxit')->first();
+
+        return response()->json($winner, 200);
+
+        /* } else {
+
+            abort(403, 'No tienes permisos para realizar esta acción.');
+        }*/
+    }
+
+    public function getLoser()
+    {
+        // if (Gate::allows('is-admin')) {
+        $users = User::all();
+        if ($users->isEmpty()) {
+            return response()->json(['message' => 'No hay jugadores registrados'], 200);
+        }
+        $users_with_percentage = $this->calculateIndividualWinPercentages($users);
+        $winner = $users_with_percentage->sortBy('Percentatge èxit')->first();
+
+        return response()->json($winner, 200);
+
+        /* } else {
+
+            abort(403, 'No tienes permisos para realizar esta acción.');
+        }*/
+    }
+
+
+
+}

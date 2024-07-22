@@ -6,10 +6,9 @@ use App\Models\User;
 use App\Models\Game;
 use Illuminate\Http\Request;
 
-const WINNED_GAME = 7;
-
 class GameController extends Controller
 {
+    const WINNED_GAME = 7;
 
     public function showGames(Request $request, string $id)
     {
@@ -56,7 +55,7 @@ class GameController extends Controller
                 $dice1 = rand(1, 6);
                 $dice2 = rand(1, 6);
                 $result = $dice1 + $dice2;
-                $winner = $result == WINNED_GAME;
+                $winner = $result == self::WINNED_GAME;
 
                 if ($winner) {
                     return response()->json(['message' => 'Has ganado!'], 200);

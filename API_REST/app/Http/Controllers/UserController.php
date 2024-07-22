@@ -15,9 +15,16 @@ class UserController extends Controller
     {
         $request->validate(
             [
-                'nickname' => ['string', 'max:100'],
+                'nickname' => ['nullable', 'string', 'max:100'],
                 'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-                'password' => ['required', Password::default()],
+                'password' => [
+                    'required',
+                    'string',
+                    Password::min(8)
+                        ->mixedCase()   // Al menos una letra mayúscula y una minúscula
+                        ->numbers()     // Al menos un número
+                        ->symbols(),    // Al menos un símbolo
+                ],
             ]
         );
 
@@ -41,7 +48,7 @@ class UserController extends Controller
 
     public function login(Request $request)
     {
-        $credentials = $request->only('nickname', 'password');
+        $credentials = $request->only('email', 'password');
 
         if (auth()->attempt($credentials)) {
             $user = auth()->user();
@@ -75,13 +82,13 @@ class UserController extends Controller
     public function showAllPlayers()
     {
         if (Gate::allows('is-admin')) {
-        $users = User::all();
+            $users = User::all();
 
-        if ($users->isEmpty()) {
-            return response()->json(['message' => 'No hay jugadores registrados'], 200);
-        }
-        $users_with_percentage = $this->calculateIndividualWinPercentages($users);
-        return response()->json($users_with_percentage, 200);
+            if ($users->isEmpty()) {
+                return response()->json(['message' => 'No hay jugadores registrados'], 200);
+            }
+            $users_with_percentage = $this->calculateIndividualWinPercentages($users);
+            return response()->json($users_with_percentage, 200);
         } else {
 
             abort(403, 'No tienes permisos para realizar esta acción.');
@@ -123,19 +130,15 @@ class UserController extends Controller
     public function getRanking()
     {
         if (Gate::allows('is-admin')) {
-        $games = Game::all();
-        if ($games->isNotEmpty()) {
-            $totalGames = $games->count();
-            $winnedGames = $games->where('winner', true)->count();
-            $winPercentage = ($winnedGames / $totalGames) * 100;
-            $winPercentageFormatted = number_format($winPercentage, 2);
+            $users = User::all();
 
-            return response()->json(['Percentatge èxit mitjà total' => $winPercentageFormatted . "%"], 200);
-        } else {
-            return response()->json(['message' => 'No hay partidas registradas todavia'], 200);
-        }
-
-
+            if ($users->isNotEmpty()) {
+                $users_with_percentage = $this->calculateIndividualWinPercentages($users);
+                $ranking = $users_with_percentage->sortByDesc('Percentatge èxit');
+                return response()->json($ranking, 200);
+            } else {
+                return response()->json(['message' => 'No hay partidas registradas todavia'], 200);
+            }
         } else {
 
             abort(403, 'No tienes permisos para realizar esta acción.');
@@ -145,15 +148,14 @@ class UserController extends Controller
     public function getWinner()
     {
         if (Gate::allows('is-admin')) {
-        $users = User::all();
-        if ($users->isEmpty()) {
-            return response()->json(['message' => 'No hay jugadores registrados'], 200);
-        }
-        $users_with_percentage = $this->calculateIndividualWinPercentages($users);
-        $winner = $users_with_percentage->sortByDesc('Percentatge èxit')->first();
+            $users = User::all();
+            if ($users->isEmpty()) {
+                return response()->json(['message' => 'No hay jugadores registrados'], 200);
+            }
+            $users_with_percentage = $this->calculateIndividualWinPercentages($users);
+            $winner = $users_with_percentage->sortByDesc('Percentatge èxit')->first();
 
-        return response()->json($winner, 200);
-
+            return response()->json($winner, 200);
         } else {
 
             abort(403, 'No tienes permisos para realizar esta acción.');
@@ -163,21 +165,17 @@ class UserController extends Controller
     public function getLoser()
     {
         if (Gate::allows('is-admin')) {
-        $users = User::all();
-        if ($users->isEmpty()) {
-            return response()->json(['message' => 'No hay jugadores registrados'], 200);
-        }
-        $users_with_percentage = $this->calculateIndividualWinPercentages($users);
-        $winner = $users_with_percentage->sortBy('Percentatge èxit')->first();
+            $users = User::all();
+            if ($users->isEmpty()) {
+                return response()->json(['message' => 'No hay jugadores registrados'], 200);
+            }
+            $users_with_percentage = $this->calculateIndividualWinPercentages($users);
+            $winner = $users_with_percentage->sortBy('Percentatge èxit')->first();
 
-        return response()->json($winner, 200);
-
+            return response()->json($winner, 200);
         } else {
 
             abort(403, 'No tienes permisos para realizar esta acción.');
         }
     }
-
-
-
 }

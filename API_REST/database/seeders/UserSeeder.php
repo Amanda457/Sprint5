@@ -18,7 +18,7 @@ class UserSeeder extends Seeder
         User::factory()->admin()->create([
             'nickname' => 'Admin',
             'email' => 'hola@admin.com',
-            'password' => Hash::make('12345678'), 
+            'password' => Hash::make('Admin123!'), 
         ]);
 
         $players = User::factory(5)->create();

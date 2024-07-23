@@ -132,12 +132,12 @@ class UserController extends Controller
         if (Gate::allows('is-admin')) {
             $users = User::all();
 
-            if ($users->isNotEmpty()) {
+            if ($users->isEmpty()) {
+                return response()->json(['message' => 'No hay jugadores registrados'], 200);
+            } else {
                 $users_with_percentage = $this->calculateIndividualWinPercentages($users);
                 $ranking = $users_with_percentage->sortByDesc('Percentatge èxit');
                 return response()->json($ranking, 200);
-            } else {
-                return response()->json(['message' => 'No hay partidas registradas todavia'], 200);
             }
         } else {
 

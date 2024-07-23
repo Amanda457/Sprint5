@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Support\Facades\Gate;
 use Laravel\Passport\ClientRepository as PassportClientRepository;
 use Laravel\Passport\Passport;
 use Tests\TestCase;
@@ -13,6 +14,8 @@ class UserTest extends TestCase
 {
    use RefreshDatabase;
    protected $admin;
+   protected $anotherUser;
+   protected $adminToken;
 
    protected function setUp(): void
     {
@@ -34,7 +37,13 @@ class UserTest extends TestCase
         $this->admin->save();
         //Para dar token
         $this->adminToken = $this->admin->createToken('AdminToken')->accessToken;
-
+       
+        //Usuario con rol de jugador
+        $this->anotherUser = User::factory()->create([
+            'nickname' => 'Another User',
+            'email' => 'anotheruser@example.com',
+            'password' => bcrypt('anotheruserpassword'),
+        ]);
     }
     #[\PHPUnit\Framework\Attributes\Test] 
     public function user_can_be_registred(){
@@ -49,7 +58,7 @@ class UserTest extends TestCase
 
         $response->assertStatus(201);
 
-        $this->assertCount(2, User::all());
+        $this->assertCount(3, User::all());
 
         $user = User::orderBy('nickname', 'desc')->first();
 
@@ -133,7 +142,7 @@ class UserTest extends TestCase
             'Authorization' => "Bearer $this->adminToken",
         ])->getJson('/api/players');
 
-        $response->assertOk()->assertJsonCount(4);
+        $response->assertOk()->assertJsonCount(5);
 
     }
 
@@ -169,15 +178,9 @@ class UserTest extends TestCase
     #[\PHPUnit\Framework\Attributes\Test]
     public function user_cannot_update_another_users_nickname()
     {
-        $anotherUser = User::factory()->create([
-            'nickname' => 'Another User',
-            'email' => 'anotheruser@example.com',
-            'password' => bcrypt('anotheruserpassword'),
-        ]);
-
         $response = $this->withHeaders([
             'Authorization' => "Bearer $this->adminToken",
-        ])->putJson('/api/players/' . $anotherUser->id, [
+        ])->putJson('/api/players/' . $this->anotherUser->id, [
             'nickname' => 'AnotherNickname',
         ]);
 
@@ -187,8 +190,8 @@ class UserTest extends TestCase
                  ]);
 
         // Verificar que el nickname no ha cambiado
-        $anotherUser->refresh();
-        $this->assertNotEquals('AnotherNickname', $anotherUser->nickname);
+        $this->anotherUser->refresh();
+        $this->assertNotEquals('AnotherNickname', $this->anotherUser->nickname);
     }
     #[\PHPUnit\Framework\Attributes\Test]
     public function update_nickname_with_empty_value()
@@ -207,5 +210,73 @@ class UserTest extends TestCase
         // Verificar que el nickname se ha actualizado a 'Anònim'
         $this->admin->refresh();
         $this->assertEquals('Anònim', $this->admin->nickname);
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function admin_can_get_ranking(){
+
+        $this->withoutExceptionHandling();
+        User::factory()->count(3)->create(); 
+
+
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer $this->adminToken",
+        ])-> getJson('api/players/ranking');
+
+        $response->assertStatus(200);
+    }
+
+    /*#[\PHPUnit\Framework\Attributes\Test]
+    public function admin_message_ranking_no_users(){
+        $this->withoutExceptionHandling();
+      
+
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer $this->adminToken",
+        ])-> getJson('api/players/ranking');
+
+
+        $response->assertStatus(200);
+        $response->assertJson(['message' => 'No hay jugadores registrados',]);
+
+    }
+    --> Este test no funciona porque necesita usuario autenticado, por lo cual no habra DB vacía.
+    */
+
+/*
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function it_returns_no_players_registered_message_when_no_users_exist_winner()
+    {
+       
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer $this->adminToken",
+        ])->getJson('api/players/ranking/winner');
+
+        $response->assertStatus(200)
+                 ->assertJson(['message' => 'No hay jugadores registrados']);
+    }
+    --> Este test no funciona porque necesita usuario autenticado, por lo cual no habra DB vacía.
+    */
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function admin_returns_the_winner_when_users_exist()
+    {
+      
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer $this->adminToken",
+        ])-> getJson('api/players/ranking/winner');
+
+        $response->assertStatus(200);
+ 
+    }
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function admin_admin_get_loser_with_users()
+    {
+     
+        $response = $this->withHeaders([
+            'Authorization' => "Bearer $this->adminToken",
+        ])-> getJson('api/players/ranking/winner');
+
+        $response->assertStatus(200);
+       
     }
 }

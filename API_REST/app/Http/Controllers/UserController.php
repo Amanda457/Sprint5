@@ -20,7 +20,7 @@ class UserController extends Controller
                 'password' => [
                     'required',
                     'string',
-                    Password::min(8)
+                    Password::min(9)
                         ->mixedCase()   // Al menos una letra mayúscula y una minúscula
                         ->numbers()     // Al menos un número
                         ->symbols(),    // Al menos un símbolo
@@ -29,6 +29,11 @@ class UserController extends Controller
         );
 
         $nickname = $request->nickname ?? 'Anònim';
+        if ($nickname !== 'Anònim') {
+            $request->validate([
+                'nickname' => 'unique:users,nickname',
+            ]);
+        }
 
         $user = User::create(
             [
@@ -121,7 +126,19 @@ class UserController extends Controller
         } else {
 
             $request->validate(['nickname' => ['nullable', 'string', 'max:100']]);
-            $user->nickname = $request->nickname ?? 'Anònim';
+            if (empty($request->nickname)) {
+                $nickname = $user->nickname;
+                return response()->json(['message' => 'No puedes dejar el nickname en blanco. De momento seguirás siendo '.$nickname], 400);
+            } else {
+                $nickname = $request->nickname;
+            }
+
+            if ($nickname !== 'Anònim') {
+                $request->validate([
+                    'nickname' => 'unique:users,nickname',
+                ]);
+            }
+            $user->nickname = $nickname;
             $user->save();
             return response()->json(['message' => 'Nickname modificado, ¡Buen cambio!.'], 200);
         }

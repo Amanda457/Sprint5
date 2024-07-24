@@ -202,14 +202,12 @@ class UserTest extends TestCase
             'nickname' => '',
         ]);
 
-        $response->assertStatus(200)
+        $response->assertStatus(400)
                  ->assertJson([
-                     'message' => 'Nickname modificado, ¡Buen cambio!.',
+                     'message' => 'No puedes dejar el nickname en blanco. De momento seguirás siendo '.$this->admin->nickname,
                  ]);
 
-        // Verificar que el nickname se ha actualizado a 'Anònim'
-        $this->admin->refresh();
-        $this->assertEquals('Anònim', $this->admin->nickname);
+        $this->assertNotEquals('Anònim', $this->admin->nickname);
     }
 
     #[\PHPUnit\Framework\Attributes\Test]

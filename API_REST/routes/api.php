@@ -21,11 +21,10 @@ Route::middleware(['auth:api'])->group(function () {
         Route::get('/players/ranking/winner', [UserController::class, 'getWinner']);
     });
 
-    Route::middleware(['can:is-player'])->group(function () {
       
         Route::post('/players/{id}/games', [GameController::class, 'playGame']);
         Route::delete('/players/{id}/games', [GameController::class, 'deleteGames']);
         Route::get('/players/{id}/games', [GameController::class, 'showGames']);
-    });
+    
 });
 

@@ -8,6 +8,7 @@ php artisan migrate
 php artisan key:generate
 php artisan passport:keys
 php artisan passport:client --personal
+php artisan db:seed
 
 El usuario admin es:
     'nickname' => 'Admin'

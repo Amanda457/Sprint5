@@ -38,12 +38,13 @@ class GameTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJson([
-                'Porcentaje de éxito' => 100,
+                'Porcentaje de éxito' => "100%",
                 'Sus partidas jugadas' => [
                     [
-                        'dice1' => 3,
-                        'dice2' => 4,
-                        'winner' => true,
+                        'Partida número' => 1,
+                        'dado 1' => 3,
+                        'dado 2' => 4,
+                        'resultado' => "ganador",
                     ]
                 ]
             ]);

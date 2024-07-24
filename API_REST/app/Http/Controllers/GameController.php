@@ -26,14 +26,26 @@ class GameController extends Controller
                 $games = User::find($id)->games;
 
                 if ($games->isEmpty()) {
-                    return response(['message' => 'No tienes partidas.'], 200);
+                    return response(['message' => 'No tienes ninguna partida registrada.'], 200);
                 }
                 $games = $user->games()->select('id', 'dice1', 'dice2', 'winner')->get();
                 $totalGames = $user->games()->count();
                 $wonGames = $user->games()->where('winner', true)->count();
                 $winPercentage = ($wonGames / $totalGames) * 100;
 
-                return response()->json(['Porcentaje de éxito' => $winPercentage, 'Sus partidas jugadas' => $games], 200);
+                $formattedGames = $games->map(function ($game, $index) {
+                    return [
+                        'Partida número' => $index + 1,
+                        'dado 1' => $game->dice1,
+                        'dado 2' => $game->dice2,
+                        'resultado' => $game->winner ? 'ganador' : 'perdedor'
+                    ];
+                });
+            
+                return response()->json([
+                    'Porcentaje de éxito' => $winPercentage."%",
+                    'Sus partidas jugadas' => $formattedGames
+                ], 200);
             }
         }
     }
@@ -57,18 +69,27 @@ class GameController extends Controller
                 $result = $dice1 + $dice2;
                 $winner = $result == self::WINNED_GAME;
 
-                if ($winner) {
-                    return response()->json(['message' => 'Has ganado!'], 200);
-                } else {
-                    return response()->json(['message' => 'Loser.'], 200);
-                }
-
                 $game = Game::create([
                     'user_id' => $userId,
                     'dice1' => $dice1,
                     'dice2' => $dice2,
                     'winner' => $winner,
                 ]);
+
+                if ($winner) {
+                    return response()->json([
+                        'message' => 'Has ganado! Tus dados han tenido estos valores:',
+                        'dado 1' => $dice1,
+                        'dado 2' => $dice2,
+                        'total' => $result], 200);
+                } else {
+                    return response()->json(['message' => 'Loser. Tus dados han tenido estos lamentables valores:',
+                    'dado 1' => $dice1,
+                    'dado 2' => $dice2,
+                    'total' => $result], 200);
+                }
+
+               
             }
         }
     }
